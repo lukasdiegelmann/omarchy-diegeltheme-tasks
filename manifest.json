@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "id": "diegel.tasks",
+  "name": "Taskleiste",
+  "version": "1.0.0",
+  "author": "Lukas Diegelmann",
+  "description": "Offene Fenster als Icons, klickbar zum Fokussieren",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Tasks.qml"
+  },
+  "barWidget": {
+    "displayName": "Taskleiste",
+    "description": "Offene Fenster als Icons, klickbar zum Fokussieren",
+    "category": "Compositor",
+    "allowMultiple": false,
+    "defaults": {
+      "scope": "all",
+      "iconSize": 22,
+      "showWorkspace": false
+    },
+    "schema": [
+      {
+        "key": "scope",
+        "type": "string",
+        "label": "Umfang: workspace | all"
+      },
+      {
+        "key": "iconSize",
+        "type": "number",
+        "label": "Icon-Größe in px"
+      },
+      {
+        "key": "showWorkspace",
+        "type": "boolean",
+        "label": "Workspace-Nummer vor jeder Gruppe"
+      }
+    ]
+  }
+}
