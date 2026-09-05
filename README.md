@@ -1,4 +1,4 @@
-# diegel.tasks — Taskleiste
+# diegeltheme.bar.tasks — Taskleiste
 
 Offene Fenster als Icons, nach Workspace gruppiert, mit Trennlinien und einem
 Highlight, das beim Workspace-Wechsel zur neuen Gruppe gleitet.
@@ -12,7 +12,7 @@ omarchy plugin add https://github.com/lukasdiegelmann/omarchy-diegeltheme-tasks.
 ## Verwendung
 
 ```jsonc
-{ "id": "diegel.tasks", "scope": "all", "iconSize": 22, "showWorkspace": false }
+{ "id": "diegeltheme.bar.tasks", "scope": "all", "iconSize": 22, "showWorkspace": false }
 ```
 
 | Einstellung | Bedeutung |

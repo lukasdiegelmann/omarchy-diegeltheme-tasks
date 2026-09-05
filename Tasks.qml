@@ -12,7 +12,7 @@ import qs.Ui
 // Umfang als auch die stabile Sortierung.
 BarWidget {
   id: root
-  moduleName: "diegel.tasks"
+  moduleName: "diegeltheme.bar.tasks"
 
   // "workspace" = nur der aktive Workspace (klassische Taskleiste),
   // "all" = alle Fenster über alle Workspaces.
@@ -228,7 +228,7 @@ BarWidget {
     // Heller als der Balken, nicht als getönter Textfarbton: in der AGS-Bar war
     // die Pille (#666666) das hellere Element vor dem dunkleren Balken (#4a4a4a).
     // Von der Farbe der TRAGENDEN Bar abgeleitet, nicht von Color.bar.background:
-    // die eigene Bar (diegel.bar) setzt ihren Hintergrund selbst und
+    // die eigene Bar (diegeltheme.bar) setzt ihren Hintergrund selbst und
     // weicht damit bewusst vom Theme ab. `bar` wird von BarWidget injiziert und
     // ist beim ersten Auswerten noch undefiniert — daher der Fallback.
     // Qt.lighter skaliert den HSV-Wert; #4a4a4a * 1.4 landet bei #686868.
