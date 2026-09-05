@@ -6,7 +6,7 @@ Highlight, das beim Workspace-Wechsel zur neuen Gruppe gleitet.
 ## Installation
 
 ```bash
-omarchy plugin add https://github.com/lukasdiegelmann/omarchy-diegel-tasks.git
+omarchy plugin add https://github.com/lukasdiegelmann/omarchy-diegeltheme-tasks.git
 ```
 
 ## Verwendung
