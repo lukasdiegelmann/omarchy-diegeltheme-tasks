@@ -4,36 +4,36 @@ import Quickshell.Hyprland
 import qs.Commons
 import qs.Ui
 
-// Taskleiste: offene Fenster als Icons, mittig in einer Pille auf dem Bar-
-// Hintergrund — derselbe Aufbau wie im früheren AGS-Dock.
+// Taskbar: open windows as icons, centred in a pill on the bar background —
+// the same construction as the earlier AGS dock.
 //
-// Fensterquelle ist Hyprlands Toplevel-Liste statt ToplevelManager, weil nur sie
-// die Workspace-Zugehörigkeit mitliefert; die braucht sowohl der "workspace"-
-// Umfang als auch die stabile Sortierung.
+// The window source is Hyprland's toplevel list rather than ToplevelManager,
+// because only that one carries the workspace a window sits on; both the
+// "workspace" scope and the stable ordering need it.
 BarWidget {
   id: root
   moduleName: "diegeltheme.bar.tasks"
 
-  // "workspace" = nur der aktive Workspace (klassische Taskleiste),
-  // "all" = alle Fenster über alle Workspaces.
+  // "workspace" = the active workspace only (a classic taskbar),
+  // "all" = every window across all workspaces.
   readonly property string scope: String(setting("scope", "workspace"))
   readonly property int iconSize: Number(setting("iconSize", 20))
-  // Nummer des Workspaces vor jeder Gruppe. Die Trennlinie allein zeigt nur, WO
-  // eine Gruppe endet, nicht WELCHER Workspace es ist — erst die Nummer
-  // beantwortet das. Abschaltbar, falls es zu viel wird.
+  // Workspace number in front of each group. A divider alone only shows WHERE
+  // a group ends, not WHICH workspace it is — the number answers that.
+  // Switchable, in case it is too much.
   readonly property bool showWorkspace: setting("showWorkspace", false) === true
 
-  // Vordergrundfarbe der tragenden Bar; `bar` wird von BarWidget injiziert und
-  // ist beim ersten Auswerten noch undefiniert.
+  // Foreground colour of the carrying bar; `bar` is injected by BarWidget and
+  // is still undefined on the first evaluation.
   readonly property color fg: root.bar ? root.bar.barForeground : Color.bar.text
 
-  // Quickshell befüllt Hyprland.toplevels faul — ohne Refresh bleibt die Liste
-  // beim Start leer. Danach hält die IPC-Verbindung sie aktuell.
+  // Quickshell fills Hyprland.toplevels lazily — without a refresh the list
+  // stays empty at startup. After that the IPC connection keeps it current.
   Component.onCompleted: {
     Hyprland.refreshToplevels()
     Hyprland.refreshWorkspaces()
-    // Erstbefuellung des ListModels: onGroupsSourceChanged feuert nur bei
-    // AENDERUNGEN, der Anfangszustand kaeme sonst nie an.
+    // First fill of the ListModel: onGroupsSourceChanged only fires on CHANGES,
+    // so the initial state would never arrive.
     root.syncGroups()
   }
 
@@ -45,11 +45,11 @@ BarWidget {
     return null
   }
 
-  // Das Modell trägt bewusst nur ADRESSEN und Workspace-Ids, keine Toplevel-
-  // Objekte — wie Omarchys Workspaces-Widget. Ein Delegate überlebt so das
-  // Verschwinden eines Fensters, statt beim Abbau auf ein totes QObject zu binden.
-  // Gruppiert wird nach Workspace, damit die Trennlinien etwas zu trennen haben:
-  // [{ workspace: 1, addresses: [...] }, ...], aufsteigend nach Workspace.
+  // The model deliberately carries only ADDRESSES and workspace ids, never
+  // toplevel objects — like Omarchy's own workspaces widget. A delegate thus
+  // survives a window disappearing instead of binding to a dead QObject on
+  // teardown. Grouped by workspace so the dividers have something to divide:
+  // [{ workspace: 1, addresses: [...] }, ...], ascending by workspace.
   function windowGroups() {
     var buckets = ({})
     var ids = []
@@ -58,7 +58,7 @@ BarWidget {
 
     for (var i = 0; i < values.length; i++) {
       var t = values[i]
-      // Special-Workspaces (id <= 0) gehören nicht in die Taskleiste.
+      // Special workspaces (id <= 0) do not belong in a taskbar.
       if (!t || !t.workspace || t.workspace.id <= 0) continue
       if (root.scope !== "all" && (!focused || t.workspace.id !== focused.id)) continue
       var ws = t.workspace.id
@@ -70,8 +70,8 @@ BarWidget {
 
     var out = []
     for (var j = 0; j < ids.length; j++) {
-      // Nach Adresse sortiert: die ist willkürlich, aber pro Fenster STABIL —
-      // sonst springen die Icons bei jeder Aktualisierung.
+      // Sorted by address: arbitrary, but STABLE per window — otherwise the
+      // icons would jump on every refresh.
       buckets[ids[j]].sort()
       out.push({ workspace: ids[j], addresses: buckets[ids[j]] })
     }
@@ -80,21 +80,21 @@ BarWidget {
 
   function appId(t) {
     if (t && t.wayland && t.wayland.appId) return String(t.wayland.appId)
-    // Fallback auf die Hyprland-Klasse: XWayland-Fenster haben oft keine appId.
+    // Fall back to the Hyprland class: XWayland windows often have no appId.
     if (t && t.lastIpcObject && t.lastIpcObject["class"]) return String(t.lastIpcObject["class"])
     return ""
   }
 
-  // Index appId/WM-Klasse -> Desktop-Eintrag über StartupWMClass. Den braucht
-  // alles, dessen Fensterklasse nicht wie der Desktop-Eintrag heißt — Electron-
-  // Apps und die meisten Chrome-Webapps. Einmal aufgebaut und nur neu erzeugt,
-  // wenn sich die App-Liste ändert: ein Scan pro Icon-Auflösung wäre in einer
-  // Bindung deutlich zu teuer.
-  // Der Cache liegt IM Objekt, nicht in zwei Properties: `startupClassEntry`
-  // wird aus der iconSource-Bindung heraus aufgerufen, und eine Zuweisung an
-  // eine Property waere dort eine Aenderung an einer Abhaengigkeit derselben
-  // Bindung — Qt meldet das als Binding loop. Ein Feld eines bestehenden
-  // Objekts zu mutieren loest dagegen kein Aenderungssignal aus.
+  // Index appId/WM class -> desktop entry via StartupWMClass. Anything whose
+  // window class is not named like its desktop entry needs this — Electron
+  // apps and most Chrome web apps. Built once and rebuilt only when the app
+  // list changes: a scan per icon lookup would be far too expensive inside a
+  // binding.
+  // The cache lives INSIDE an object rather than in two properties:
+  // `startupClassEntry` is called from the iconSource binding, and assigning
+  // to a property there would change a dependency of that same binding — Qt
+  // reports it as a binding loop. Mutating a field of an existing object
+  // raises no change signal.
   readonly property var startupClassCache: ({ index: null, count: -1 })
 
   function startupClassEntry(id) {
@@ -120,9 +120,9 @@ BarWidget {
         var viaClass = Quickshell.iconPath(String(byClass.icon), true)
         if (viaClass) return viaClass
       }
-      // heuristicLookup findet viele Apps nicht (für "foot" z.B. null), der
-      // appId selbst ist dann aber oft schon ein gültiger Icon-Name im Theme —
-      // deshalb beide Wege nacheinander probieren.
+      // heuristicLookup misses many apps (null for "foot", for instance), but the
+      // appId itself is often already a valid icon name in the theme — so try
+      // both paths in turn.
       var entry = DesktopEntries.heuristicLookup(id)
       if (entry && entry.icon) {
         var viaEntry = Quickshell.iconPath(String(entry.icon), true)
@@ -139,9 +139,9 @@ BarWidget {
     return title !== "" ? title : root.appId(t)
   }
 
-  // Der wandernde Highlight darf nur existieren, wenn der aktive Workspace auch
-  // wirklich eine Gruppe hat — sonst bliebe er nach dem Schliessen des letzten
-  // Fensters auf der alten Position stehen.
+  // The travelling highlight may only exist while the active workspace really
+  // has a group — otherwise it would linger at the old position after the
+  // last window closed.
   readonly property bool hasFocusedGroup: {
     var groups = root.windowGroups()
     var f = Hyprland.focusedWorkspace
@@ -150,15 +150,15 @@ BarWidget {
     return false
   }
 
-  // Der Repeater darf NICHT direkt an windowGroups() haengen: die Funktion
-  // liefert bei jeder Auswertung ein neues Array, und darauf baut ein Repeater
-  // saemtliche Delegates neu auf. Alles springt dann gleichzeitig an seinen
-  // neuen Platz, statt dorthin zu gleiten. Dieses ListModel wird stattdessen
-  // nur nachgezogen — verschwundene Gruppen raus, neue rein, bestehende
-  // behalten ihr Item und damit ihre Position, von der aus sie animieren.
+  // The Repeater must NOT hang off windowGroups() directly: that function
+  // returns a new array on every evaluation, and a Repeater rebuilds all its
+  // delegates on that. Everything then jumps to its new place at once
+  // instead of gliding there. This ListModel is updated differentially
+  // instead — vanished groups out, new ones in, existing ones keep their
+  // item and therefore the position they animate from.
   ListModel {
     id: groupModel
-    dynamicRoles: true   // noetig, damit `addresses` ein JS-Array sein darf
+    dynamicRoles: true   // needed so `addresses` may be a JS array
   }
 
   readonly property var groupsSource: root.windowGroups()
@@ -173,7 +173,7 @@ BarWidget {
   function syncGroups() {
     var groups = root.groupsSource
 
-    // 1. Verschwundene Gruppen entfernen.
+    // 1. Remove groups that are gone.
     var i = 0
     while (i < groupModel.count) {
       var stillThere = false
@@ -183,10 +183,9 @@ BarWidget {
       else groupModel.remove(i)
     }
 
-    // 2. Neue einfuegen, vorhandene an die richtige Stelle schieben und nur
-    //    dann anfassen, wenn sich ihre Fensterliste wirklich geaendert hat —
-    //    ein setProperty auf gleichem Inhalt wuerde den inneren Repeater
-    //    unnoetig neu bauen.
+    // 2. Insert new ones, move existing ones into place, and only touch them
+    //    when their window list actually changed — a setProperty with equal
+    //    content would rebuild the inner Repeater for nothing.
     for (var k = 0; k < groups.length; k++) {
       var g = groups[k]
       var idx = root.indexOfWorkspace(g.workspace)
@@ -206,59 +205,58 @@ BarWidget {
   implicitWidth: pill.implicitWidth
   implicitHeight: barSize
 
-  // Die Pille hebt die Fensterliste vom durchgehenden Bar-Hintergrund ab.
-  // Eingefärbt wird mit der Textfarbe bei niedriger Deckkraft statt mit einem
-  // festen Grauwert — so passt sie in hellen wie in dunklen Themes zum Balken.
+  // The pill lifts the window list off the continuous bar background.
+  // It is tinted from the bar's own colour rather than a fixed grey, so it
+  // suits the bar in light and dark themes alike.
   Rectangle {
     id: pill
     anchors.centerIn: parent
-    // GAR KEIN Innenabstand — weder vertikal noch horizontal. Vertikal nicht,
-    // damit die aktive Gruppe exakt die Hoehe dieser Pille hat und beide bei
-    // radius = height/2 denselben Kappenradius bekommen. Horizontal nicht, damit
-    // die erste und letzte Gruppe genau an der Aussenkante beginnt bzw. endet:
-    // jedes Padding hier schoebe die innere Pille nach innen, und die beiden
-    // Kurven liefen auseinander. Die Luft um die Icons setzt stattdessen die
-    // Gruppe selbst (die content-Row in groupPill).
+    // NO padding at all — neither vertical nor horizontal. Not vertical, so the
+    // active group has exactly the height of this pill and both get the same
+    // cap radius at radius = height/2. Not horizontal, so the first and last
+    // group start and end exactly at the outer edge: any padding here would
+    // push the inner pill inwards and the two curves would drift apart. The
+    // air around the icons is set by the group itself (the content Row inside
+    // groupPill).
     implicitWidth: row.implicitWidth
-    // Waechst und schrumpft mit, statt umzuspringen. Dieselbe Dauer und Kurve
-    // wie die Row-Uebergaenge darunter, damit Pille und Icons zusammen laufen.
+    // Grows and shrinks along instead of snapping. Same duration and curve as
+    // the Row transitions below, so pill and icons travel together.
     Behavior on implicitWidth { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
     implicitHeight: Math.max(1, root.barSize - Style.space(4))
-    radius: height / 2       // Radius = halbe Höhe ergibt die echte Pillenform
-    // Heller als der Balken, nicht als getönter Textfarbton: in der AGS-Bar war
-    // die Pille (#666666) das hellere Element vor dem dunkleren Balken (#4a4a4a).
-    // Von der Farbe der TRAGENDEN Bar abgeleitet, nicht von Color.bar.background:
-    // die eigene Bar (diegeltheme.bar) setzt ihren Hintergrund selbst und
-    // weicht damit bewusst vom Theme ab. `bar` wird von BarWidget injiziert und
-    // ist beim ersten Auswerten noch undefiniert — daher der Fallback.
-    // Qt.lighter skaliert den HSV-Wert; #4a4a4a * 1.4 landet bei #686868.
+    radius: height / 2       // radius = half the height gives a true pill cap
+    // Lighter than the bar, not a tinted shade of the text colour: in the AGS
+    // bar the pill (#666666) was the lighter element in front of the darker
+    // bar (#4a4a4a). Derived from the colour of the CARRYING bar rather than
+    // Color.bar.background: diegeltheme.bar sets its background itself and
+    // deliberately departs from the theme. `bar` is injected by BarWidget and
+    // is undefined on the first evaluation — hence the fallback.
+    // Qt.lighter scales the HSV value; #4a4a4a * 1.4 lands at #686868.
     color: Qt.lighter(root.bar && root.bar.background ? root.bar.background : Color.bar.background, 1.4)
 
-    // Der Highlight ist bewusst EIN Rechteck ausserhalb der Row, nicht die
-    // Fuellung der jeweiligen Gruppe: nur ein einzelnes, durchgehend
-    // existierendes Item kann von einer Position zur naechsten gleiten. Zwei
-    // Gruppenfuellungen wuerden stattdessen die eine aus- und die andere
-    // einblenden — da gibt es nichts zu animieren.
+    // The highlight is deliberately ONE rectangle outside the Row, not the fill
+    // of the respective group: only a single, continuously existing item can
+    // glide from one position to the next. Two group fills would instead fade
+    // one out and the other in — there is nothing to animate in that.
     //
-    // Hyprland 0.56 meldet den Fortschritt einer Wischgeste NICHT ueber IPC
-    // (nur den fertigen Workspace-Wechsel). Der Balken kann dem Finger also
-    // nicht folgen; er laeuft nach dem Umschalten in die neue Position. Dauer
-    // und Kurve sind an das Gefuehl der Geste angelehnt, nicht daran gekoppelt.
+    // Hyprland 0.56 does NOT report the progress of a swipe gesture over IPC
+    // (only the finished workspace change). The bar therefore cannot follow
+    // the finger; it runs to the new position after the switch. Duration and
+    // curve are modelled on the feel of the gesture, not coupled to it.
     Rectangle {
       id: highlight
       readonly property Item target: row.focusedPill
 
-      // NICHT an `target` gekoppelt: waehrend eines Delegate-Wechsels ist die
-      // Referenz einen Moment null, und ein unsichtbarer Highlight schaltet
-      // ueber `enabled` seine Animation ab — er saesse danach ohne Uebergang
-      // an der neuen Stelle. Solange es eine fokussierte Gruppe GIBT, bleibt er
-      // sichtbar und haelt so lange seine letzte Geometrie.
+      // NOT tied to `target`: during a delegate swap the reference is null for a
+      // moment, and an invisible highlight switches its animation off through
+      // `enabled` — it would then sit at the new place without a transition. As
+      // long as a focused group EXISTS it stays visible and holds its last
+      // geometry meanwhile.
       visible: root.hasFocusedGroup
       property real lastX: 0
       property real lastWidth: 0
       onXChanged: if (highlight.target) highlight.lastX = highlight.x
       onWidthChanged: if (highlight.target) highlight.lastWidth = highlight.width
-      // target.parent ist die Gruppen-Row, deren x innerhalb von `row` liegt.
+      // target.parent is the group Row, whose x lies inside `row`.
       x: highlight.target ? row.x + highlight.target.parent.x + highlight.target.x : highlight.lastX
       anchors.verticalCenter: parent.verticalCenter
       width: highlight.target ? highlight.target.width : highlight.lastWidth
@@ -266,8 +264,8 @@ BarWidget {
       radius: height / 2
       color: Qt.lighter(pill.color, 1.5)
 
-      // Nur animieren, solange der Highlight schon steht — taucht er neu auf,
-      // soll er an seiner Position erscheinen und nicht von links hereinfahren.
+      // Only animate while the highlight already stands — when it appears anew
+      // it should show up in place instead of flying in from the left.
       Behavior on x     { enabled: highlight.visible; NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
       Behavior on width { enabled: highlight.visible; NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
     }
@@ -275,33 +273,33 @@ BarWidget {
     Row {
       id: row
 
-      // Nur wirksam, weil das Modell oben stabil ist: bleibt ein Delegate am
-      // Leben, laesst sich seine neue Position anfahren statt zuzuweisen.
+      // Only effective because the model above is stable: while a delegate stays
+      // alive, its new position can be travelled to instead of assigned.
       add: Transition { NumberAnimation { properties: "x"; duration: 220; easing.type: Easing.OutCubic } }
       move: Transition { NumberAnimation { properties: "x"; duration: 220; easing.type: Easing.OutCubic } }
       anchors.centerIn: parent
       spacing: 0
 
-      // Die fokussierte Gruppe meldet sich als OBJEKT an, nicht mit Zahlen.
-      // Zahlen zu pushen ging schief, sobald sich die Fensterliste aenderte:
-      // dann baut der Repeater alle Delegates neu, und ein gerade sterbender
-      // schob beim Abbau noch seine alte Geometrie hinterher — der Highlight
-      // sprang auf eine Position, die es nicht mehr gab. Ueber eine Referenz
-      // sind x und width normale Bindungen: sie folgen dem Layout von selbst,
-      // und ein abgebautes Objekt ist schlicht null.
+      // The focused group registers itself as an OBJECT, not as numbers. Pushing
+      // numbers broke as soon as the window list changed: the Repeater rebuilds
+      // every delegate, and one that was just dying still pushed its old
+      // geometry along during teardown — the highlight jumped to a position
+      // that no longer existed. Through a reference, x and width are ordinary
+      // bindings: they follow the layout by themselves, and a torn-down object
+      // is simply null.
       property Item focusedPill: null
 
       Repeater {
         model: groupModel
 
-        // Eine Gruppe = ein Workspace. Die Trennlinie gehoert zum LINKEN Rand
-        // der Gruppe und entfaellt bei der ersten — sonst haengt sie am Anfang
-        // der Pille in der Luft. Genau so war es im AGS-Dock geloest
+        // One group = one workspace. The divider belongs to the LEFT edge of a
+        // group and is dropped on the first one — otherwise it would hang in mid
+        // air at the start of the pill. The AGS dock solved it the same way
         // (.dock-group { border-left } / &:first-child { border-none }).
         Row {
           id: group
-          // Rollen des ListModels statt modelData: `workspace` ist die
-          // Workspace-Id, `addresses` die Fensterliste dieser Gruppe.
+          // ListModel roles instead of modelData: `workspace` is the workspace id,
+          // `addresses` the window list of this group.
           required property int workspace
           required property var addresses
           required property int index
@@ -312,9 +310,9 @@ BarWidget {
           readonly property bool isFocused: Hyprland.focusedWorkspace
             && Hyprland.focusedWorkspace.id === group.workspace
 
-          // Haarlinie statt Separator-Widget: ein 1px-Rechteck in einem
-          // Abstandhalter, damit links und rechts gleich viel Luft bleibt.
-          // Row ueberspringt unsichtbare Kinder, die Breite faellt also mit weg.
+          // A hairline instead of a separator widget: a 1px rectangle inside a
+          // spacer, so there is equal air left and right. A Row skips invisible
+          // children, so the width falls away with it.
           Item {
             visible: group.index > 0
             width: Style.space(7)
@@ -323,44 +321,44 @@ BarWidget {
             Rectangle {
               anchors.centerIn: parent
               width: 1
-              // Volle Hoehe der Pille statt einer kurzen Marke in der Mitte:
-              // die Linie trennt damit sichtbar zwei Flaechen, statt nur einen
-              // Punkt zwischen ihnen zu setzen.
+              // Full height of the pill instead of a short mark in the middle: the
+              // line then visibly separates two areas rather than just setting a
+              // point between them.
               height: parent.height
               color: Qt.rgba(root.fg.r, root.fg.g, root.fg.b, 0.22)
             }
           }
 
-          // Innere Pille: markiert den offenen Workspace. Deckungsgleich mit der
-          // aeusseren — gleiche Hoehe, gleicher Radius, und weil die aeussere kein
-          // Padding hat, fallen an der ersten und letzten Gruppe auch die Kurven
-          // zusammen. Dieselbe Konstruktion wie im AGS-Dock (.dock-group.active).
-          // Farbe aus der aeusseren Pille aufgehellt statt fest verdrahtet:
-          // #686868 * 1.5 landet bei ~#9c9c9c, dem AGS-Wert rgba(160,160,160).
+          // Inner pill: marks the open workspace. Congruent with the outer one —
+          // same height, same radius, and because the outer has no padding the
+          // curves coincide at the first and last group too. The same
+          // construction as the AGS dock (.dock-group.active). The colour is
+          // lightened from the outer pill rather than hard-wired: #686868 * 1.5
+          // lands near #9c9c9c, the AGS value rgba(160,160,160).
           Rectangle {
             id: groupPill
             anchors.verticalCenter: parent.verticalCenter
             height: pill.implicitHeight
             width: content.implicitWidth + Style.space(5)
             radius: height / 2
-            // Keine eigene Fuellung mehr — die malt der wandernde Highlight.
-            // Dieses Rechteck bleibt als Traeger der Geometrie stehen und
-            // meldet sie, solange es die fokussierte Gruppe ist.
+            // No fill of its own any more — the travelling highlight paints that.
+            // This rectangle stays as the carrier of the geometry and reports it
+            // for as long as it is the focused group.
             color: "transparent"
 
-            // An- und Abmelden laufen ueber Identitaetsvergleich: beim Neuaufbau
-            // des Modells ist nicht festgelegt, ob der alte Delegate vor oder
-            // nach dem neuen abgebaut wird. Nur wer selbst eingetragen ist,
-            // darf sich austragen — sonst loescht der Sterbende den Nachfolger.
-            // NUR anmelden, niemals beim Fokusverlust abmelden. Beim Wechsel
-            // werten beide Gruppen ihre isFocused-Bindung neu aus, und die
-            // Reihenfolge ist nicht festgelegt: raeumt die alte zuerst auf,
-            // steht focusedPill kurz auf null — der Highlight wird unsichtbar,
-            // die Behavior ist damit abgeschaltet, und er SPRINGT an die neue
-            // Stelle statt zu gleiten. In der anderen Richtung meldete sich die
-            // neue zuerst an, dort lief die Animation. Genau diese Asymmetrie.
-            // Der Nachfolger ueberschreibt den Eintrag ohnehin; fuer den Fall
-            // "gar keine fokussierte Gruppe" sorgt root.hasFocusedGroup.
+            // Registering runs through an identity comparison: when the model is
+            // rebuilt, QML does not define whether the old delegate is torn down
+            // before or after the new one. Only whoever is registered may
+            // deregister — otherwise the dying one deletes its successor.
+            // And it ONLY registers, never deregisters on losing focus. On a
+            // switch both groups re-evaluate their isFocused binding in an
+            // unspecified order: if the old one cleans up first, focusedPill is
+            // null for a moment — the highlight turns invisible, its Behavior is
+            // switched off with it, and it JUMPS to the new place instead of
+            // gliding. In the other direction the new one registered first and the
+            // animation ran. Exactly that asymmetry. The successor overwrites the
+            // entry anyway; the case of no focused group at all is covered by
+            // root.hasFocusedGroup.
             function claim() {
               if (group.isFocused) row.focusedPill = groupPill
             }
@@ -378,10 +376,10 @@ BarWidget {
               anchors.centerIn: parent
               spacing: Style.space(1)
 
-          // Workspace-Nummer. Gedimmt, ausser im fokussierten Workspace — so
-          // beantwortet die Leiste beide Fragen auf einen Blick: welche Fenster
-          // gehoeren zusammen, und wo bin ich gerade. Auf der hellen Fuellung
-          // waere die helle Schrift unlesbar, dort also die Kontrastfarbe.
+          // Workspace number. Dimmed except in the focused workspace — so the bar
+          // answers both questions at a glance: which windows belong together,
+          // and where am I right now. On the light fill the light type would be
+          // unreadable, so the contrast colour is used there.
           Text {
             visible: root.showWorkspace
             anchors.verticalCenter: parent.verticalCenter
@@ -397,16 +395,16 @@ BarWidget {
           Repeater {
             model: group.addresses
 
-            // NICHT `id: item`: BarIconButton laedt iconComponent ueber einen
-            // Loader, und Loader hat selbst eine Property `item`, die die id im
-            // Component-Scope ueberschatten wuerde.
+            // NOT `id: item`: BarIconButton loads iconComponent through a Loader,
+            // and Loader has a property `item` of its own that would shadow the id
+            // in the component scope.
             BarIconButton {
               id: task
               required property string modelData
 
-              // Truthiness statt `!== null`: eine var-Property ist vor der
-              // ersten Bindungsauswertung `undefined`, und `undefined !== null`
-              // ist true — der Guard haette durchgelassen.
+              // Truthiness instead of `!== null`: a var property is `undefined`
+              // before its first binding evaluation, and `undefined !== null` is
+              // true — the guard would have let it through.
               readonly property var win: root.toplevelByAddress(modelData)
               readonly property bool focused: !!win && win.activated === true
               readonly property string iconSource: win ? root.iconFor(win) : ""
@@ -414,18 +412,18 @@ BarWidget {
               bar: root.bar
               active: task.focused
               tooltipText: task.win ? root.label(task.win) : ""
-              // Enger als der Bar-Standardslot, damit die Pille nicht ausufert.
+              // Tighter than the bar's default slot, so the pill does not sprawl.
               slotSize: root.iconSize + Style.space(6)
               fixedHeight: groupPill.height
-              // Die Zeichenflaeche von BarIconButton ist sonst auf
-              // Style.bar.iconCanvas (16) festgenagelt — ein groesseres Icon
-              // wuerde darueber hinausragen statt mittig zu sitzen.
+              // The drawing area of BarIconButton is otherwise pinned to
+              // Style.bar.iconCanvas (16) — a larger icon would stick out of it
+              // instead of sitting centred.
               opticalSize: root.iconSize
 
               iconComponent: Image {
                 source: task.iconSource
-                // In physischen Pixeln dekodieren, sonst sind die Icons auf dem
-                // HiDPI-Panel weich.
+                // Decode in physical pixels, otherwise the icons are soft on the
+                // HiDPI panel.
                 sourceSize.width: root.iconSize * 2
                 sourceSize.height: root.iconSize * 2
                 width: root.iconSize
@@ -440,7 +438,7 @@ BarWidget {
                 if (button === Qt.MiddleButton) {
                   task.win.wayland.close()
                 } else {
-                  // activate() wechselt bei Hyprland auch den Workspace mit.
+                  // activate() also switches the workspace along, under Hyprland.
                   task.win.wayland.activate()
                 }
               }

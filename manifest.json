@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
   "id": "diegeltheme.bar.tasks",
-  "name": "Taskleiste",
+  "name": "Tasks",
   "version": "1.0.0",
   "author": "Lukas Diegelmann",
-  "description": "Offene Fenster als Icons, klickbar zum Fokussieren",
+  "description": "Open windows as icons, grouped by workspace",
   "kinds": [
     "bar-widget"
   ],
@@ -12,8 +12,8 @@
     "barWidget": "Tasks.qml"
   },
   "barWidget": {
-    "displayName": "Taskleiste",
-    "description": "Offene Fenster als Icons, klickbar zum Fokussieren",
+    "displayName": "Tasks",
+    "description": "Open windows as icons, grouped by workspace",
     "category": "Compositor",
     "allowMultiple": false,
     "defaults": {
@@ -25,17 +25,17 @@
       {
         "key": "scope",
         "type": "string",
-        "label": "Umfang: workspace | all"
+        "label": "Scope: workspace | all"
       },
       {
         "key": "iconSize",
         "type": "number",
-        "label": "Icon-Größe in px"
+        "label": "Icon size in px"
       },
       {
         "key": "showWorkspace",
         "type": "boolean",
-        "label": "Workspace-Nummer vor jeder Gruppe"
+        "label": "Show the workspace number per group"
       }
     ]
   }

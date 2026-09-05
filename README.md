@@ -1,24 +1,25 @@
-# diegeltheme.bar.tasks — Taskleiste
+# diegeltheme.bar.tasks — taskbar
 
-Offene Fenster als Icons, nach Workspace gruppiert, mit Trennlinien und einem
-Highlight, das beim Workspace-Wechsel zur neuen Gruppe gleitet.
+Open windows as icons, grouped by workspace, separated by hairlines, with a
+highlight that glides to the new group when you switch workspaces.
 
-## Installation
+## Install
 
 ```bash
 omarchy plugin add https://github.com/lukasdiegelmann/omarchy-diegeltheme-tasks.git
 ```
 
-## Verwendung
+## Usage
 
 ```jsonc
 { "id": "diegeltheme.bar.tasks", "scope": "all", "iconSize": 22, "showWorkspace": false }
 ```
 
-| Einstellung | Bedeutung |
+| Setting | Meaning |
 |---|---|
-| `scope` | `workspace` = nur der aktive, `all` = alle Fenster |
-| `iconSize` | Icon-Groesse in px |
-| `showWorkspace` | Workspace-Nummer vor jeder Gruppe |
+| `scope` | `workspace` = active workspace only, `all` = every window |
+| `iconSize` | icon size in px |
+| `showWorkspace` | show the workspace number in front of each group |
 
-Klick fokussiert das Fenster, mittlere Maustaste schliesst es.
+Left click focuses a window, middle click closes it. Adding or removing a window grows
+or shrinks the pill instead of making it jump.
